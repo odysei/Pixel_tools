@@ -312,23 +312,23 @@ inline int DE_trailer(const bool print, const flags &fl, data &d,
     
     if (ev.word32 & masks::TE_overflow) {
         if (print)
-            d.print_buffer += "Overflow Error, ";
+            d.print_buffer += "Overflow Error";
         status = -10;
         ++d.countErrors[channel][10];
     }
 
     if (ev.word32 & masks::TE_ROC_error) {
         if (print)
-            d.print_buffer += "Number of Rocs Error, ";
+            d.print_buffer += "Number of Rocs Error";
         status = -14;
         ++d.countErrors[channel][14];
     }
     if (ev.word32 & masks::TE_FSM_error) {
         if (print) {
             if (ev.word32 & masks::TE_PKAM)
-                d.print_buffer += "PKAM, ";
+                d.print_buffer += ", PKAM";
             if (ev.word32 & masks::TE_autoreset)
-                d.print_buffer += "Autoreset, ";
+                d.print_buffer += ", Autoreset";
         }
         status = -15;
         ++d.countErrors[channel][15];
@@ -379,7 +379,7 @@ inline void DE_trailer_TBM(const bool print, const flags &fl, data &d,
     if (event_nr > 1 || fl.printFirstReset) {
         if (tbm_status == masks::TBM_reset) {
             if (!fl.skipResetMessage) {
-                d.print_buffer += "Trailer Message";
+                d.print_buffer += " Trailer Message";
                 d.print_buffer += " TBM status:0x";
                 d.print_buffer += String_hex(tbm_status);
                 d.print_buffer += " TBM-Reset received ";
