@@ -304,35 +304,31 @@ inline int DE_trailer(const bool print, const flags &fl, data &d,
     int status = -1;
     const unsigned long tbm_status = (ev.word32 & masks::TBM_status);
 
+    if (print) {
+        d.print_buffer += "Trailer Error- ";
+        d.print_buffer += "channel: ";
+        d.print_buffer += to_string(channel) + " - ";
+    }
+    
     if (ev.word32 & masks::TE_overflow) {
-        if (print) {
-            d.print_buffer += "Overflow Error- channel: ";
-            d.print_buffer += to_string(channel) + " ";
-        }
+        if (print)
+            d.print_buffer += "Overflow Error, ";
         status = -10;
         ++d.countErrors[channel][10];
     }
 
     if (ev.word32 & masks::TE_ROC_error) {
-        if (print) {
-            d.print_buffer += "Number of Rocs Error- channel: ";
-            d.print_buffer += to_string(channel) + " ";
-            d.print_buffer += " ";
-        }
+        if (print)
+            d.print_buffer += "Number of Rocs Error, ";
         status = -14;
         ++d.countErrors[channel][14];
     }
     if (ev.word32 & masks::TE_FSM_error) {
         if (print) {
-            if (ev.word32 & masks::TE_PKAM) {
-                d.print_buffer += "PKAM- channel: ";
-                d.print_buffer += to_string(channel);
-            }
-            if (ev.word32 & masks::TE_autoreset) {
-                d.print_buffer += "Autoreset- channel: ";
-                d.print_buffer += to_string(channel);
-                d.print_buffer += " ";
-            }
+            if (ev.word32 & masks::TE_PKAM)
+                d.print_buffer += "PKAM, ";
+            if (ev.word32 & masks::TE_autoreset)
+                d.print_buffer += "Autoreset, ";
         }
         status = -15;
         ++d.countErrors[channel][15];
@@ -358,8 +354,6 @@ inline void DE_trailer_TBM(const bool print, const flags &fl, data &d,
 {
     if (fl.all_TBM_errors) {
         if (print) {
-            d.print_buffer += "Trailer Error- channel: ";
-            d.print_buffer += to_string(channel);
             if (tbm_status & masks::TBM_NTP)
                 d.print_buffer += ", no token pass";
             if (tbm_status & masks::TBM_only_reset)
@@ -385,16 +379,13 @@ inline void DE_trailer_TBM(const bool print, const flags &fl, data &d,
     if (event_nr > 1 || fl.printFirstReset) {
         if (tbm_status == masks::TBM_reset) {
             if (!fl.skipResetMessage) {
-                d.print_buffer += "Trailer Message- channel: ";
-                d.print_buffer += to_string(channel);
+                d.print_buffer += "Trailer Message";
                 d.print_buffer += " TBM status:0x";
                 d.print_buffer += String_hex(tbm_status);
                 d.print_buffer += " TBM-Reset received ";
             }
         } else {
             if (print) {
-                d.print_buffer += "Trailer Error- channel: ";
-                d.print_buffer += to_string(channel);
                 d.print_buffer += " TBM status:0x";
                 d.print_buffer += String_hex(tbm_status);
                 d.print_buffer += " ";
