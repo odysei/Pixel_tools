@@ -35,10 +35,21 @@ type tbmEventMask = 0xff;      // tbm event num mask
 /* 
  * Trailer-error-word masks
  */
-type overflow = 0x100;  // data overflow
-type FSM_error = 0x600; // pointer to FSM errors
 type ROC_error = 0x800; // pointer to #Roc errors
+type FSM_error = 0x600; // pointer to FSM errors
+type autoreset = 0x400; // under FSM bits
+type PKAM = 0x200;      // under FSM bits
+type overflow = 0x100;  // data overflow
 type TBM_status = 0xff; // TBM trailer info
+type TBM_NTP = 0x80;    // no token pass
+type TBM_reset = 0x60;  // TBM + ROC reset
+type TBM_only_reset = 0x40; // TBM-only reset
+type TBM_ROC_reset = 0x20;  // ROC reset
+type TBM_sync_err = 0x10;   // synchronization error
+type TBM_sync_trg = 0x8;    // sync trigger
+type TBM_clr_trg = 0x4;     // clear trigger counter
+type TBM_cal_trg = 0x2;     // calibration trigger
+type TBM_stk_full = 0x1;    // stack full
 
 /* 
  * Timeout-error-word masks

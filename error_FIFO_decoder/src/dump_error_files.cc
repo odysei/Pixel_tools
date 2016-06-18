@@ -19,13 +19,14 @@ inline string to_string(const double &v)
 }
 #endif
 
-flags::flags() : DumpRaw(true),
+flags::flags() : debug(true),
+                 DumpRaw(true),
                  skipResetMessage(false),
                  CHECK_PIXELS(false),
                  PRINT_PIXELS(true),
                  PRINT_ERRORS(true),
-                 debug(true),
                  printFirstReset(true),
+                 all_TBM_errors(true),
                  SELECT_CHANNEL(999)
 {
     halt = false;   // can change

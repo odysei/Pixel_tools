@@ -78,29 +78,37 @@ int Decode_data(flags &fl, data &d, event &ev)
 // Works for both, the error FIFO and the SLink error words. d.k. 25/04/07
 int Decode_error(flags &fl, data &d, event &ev)
 {
-    if ((ev.word32 & masks::errorMask) == masks::dummyMask) // DUMMY WORD
+    // DUMMY WORD
+    if ((ev.word32 & masks::errorMask) == masks::dummyMask)
         return DE_dummy(fl.debug, d, ev.tog0word);
 
-    if ((ev.word32 & masks::errorMask) == masks::gapMask) // GAP WORD
+    // GAP WORD
+    if ((ev.word32 & masks::errorMask) == masks::gapMask)
         return DE_gap(fl.debug, d, ev.tog0word);
 
+    // used in other words:
     const unsigned long channel = (ev.word32 & masks::channelMask) >> 26;
     const unsigned long event_nr = (ev.word32 & masks::eventNumMask) >> 13;
     const string str_event_nr = to_string(event_nr);
     const bool print = fl.PRINT_ERRORS || (channel == fl.SELECT_CHANNEL);
     
-    if ((ev.word32 & masks::errorMask) == masks::timeOut) // TIMEOUT
+    // TIMEOUT
+    if ((ev.word32 & masks::errorMask) == masks::timeOut)
         return DE_timeout(print, fl, d, ev, str_event_nr);
     
-    if ((ev.word32 & masks::errorMask) == masks::eventNumError) // EVENT NUMBER ERROR
+    // EVENT NUMBER ERROR
+    if ((ev.word32 & masks::errorMask) == masks::eventNumError)
         return DE_ENE(print, d, ev, str_event_nr, channel);
 
-    if (((ev.word32 & masks::errorMask) == masks::trailError)) // TRAILER
+    // TRAILER
+    if (((ev.word32 & masks::errorMask) == masks::trailError))
         return DE_trailer(print, fl, d, ev, event_nr, channel);
-    
-    if ((ev.word32 & masks::errorMask) == masks::fifoError) // FIFO
+
+    // FIFO
+    if ((ev.word32 & masks::errorMask) == masks::fifoError)
         return DE_FIFO(d, ev, str_event_nr);
     
+    // UNKOWN error
     d.print_buffer += " Unknown error?";
     d.print_buffer += String_hex(ev.word32);
     d.print_buffer += " event ";
@@ -298,8 +306,9 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
 }
 
 // TRAILER
-inline int DE_trailer(const bool print, flags &fl, data &d, event &ev,
-                      const unsigned int &event_nr, const unsigned int &channel)
+inline int DE_trailer(const bool print, const flags &fl, data &d,
+                      const event &ev, const unsigned int &event_nr,
+                      const unsigned int &channel)
 {
     int status = -1;
     const unsigned long tbm_status = (ev.word32 & masks::TBM_status);
@@ -308,8 +317,6 @@ inline int DE_trailer(const bool print, flags &fl, data &d, event &ev,
         if (print) {
             d.print_buffer += "Overflow Error- channel: ";
             d.print_buffer += to_string(channel) + " ";
-//             cout << "Overflow Error- "
-//                  << "channel: " << channel << " ";
         }
         status = -10;
         ++d.countErrors[channel][10];
@@ -320,26 +327,20 @@ inline int DE_trailer(const bool print, flags &fl, data &d, event &ev,
             d.print_buffer += "Number of Rocs Error- channel: ";
             d.print_buffer += to_string(channel) + " ";
             d.print_buffer += " ";
-//             cout << "Number of Rocs Error- "
-//                  << "channel: " << channel << " ";
         }
         status = -14;
         ++d.countErrors[channel][14];
     }
     if (ev.word32 & masks::FSM_error) {
         if (print) {
-            if (ev.word32 & 0x200) {
+            if (ev.word32 & masks::autoreset) {
                 d.print_buffer += "PKAM- channel: ";
                 d.print_buffer += to_string(channel);
-//                 cout << "PKAM- "
-//                      << "channel: " << channel;
             }
-            if (ev.word32 & 0x400) {
+            if (ev.word32 & masks::PKAM) {
                 d.print_buffer += "AutoReset- channel: ";
                 d.print_buffer += to_string(channel);
                 d.print_buffer += " ";
-//                 cout << "AutoReset- "
-//                      << "channel: " << channel;
             }
         }
         status = -15;
@@ -347,48 +348,70 @@ inline int DE_trailer(const bool print, flags &fl, data &d, event &ev,
     }
 
     // trailer errors/messages
-    if ((ev.word32 & masks::ROC_error) | (ev.word32 & masks::FSM_error) |
-        (ev.word32 & masks::overflow)) {
-
-    } else {
-        if (event_nr > 1 || fl.printFirstReset) {
-            if (tbm_status == 0x60) {
-                if (!fl.skipResetMessage) {
-                    d.print_buffer += "Trailer Message- channel: ";
-                    d.print_buffer += to_string(channel);
-                    d.print_buffer += " TBM status:0x";
-                    d.print_buffer += String_hex(tbm_status);
-                    d.print_buffer += " TBM-Reset received ";
-//                     cout << "Trailer Message- "
-//                          << "channel: " << channel << " TBM status:0x"
-//                          << hex << tbm_status << dec
-//                          << " TBM-Reset received ";
-                }
-            } else {
-                if (print) {
-                    d.print_buffer += "Trailer Error- channel: ";
-                    d.print_buffer += to_string(channel);
-                    d.print_buffer += " TBM status:0x";
-                    d.print_buffer += String_hex(tbm_status);
-                    d.print_buffer += " ";
-//                     cout << "Trailer Error- "
-//                          << "channel: " << channel << " TBM status:0x"
-//                          << hex << tbm_status << dec << " ";
-                }
-                status = -16;
-                ++d.countErrors[channel][16];
-            }
-        }
-        
-        
-
-    }
-    
+//     const unsigned long non_TBM = ((ev.word32 & masks::ROC_error) |
+//                                    (ev.word32 & masks::FSM_error) |
+//                                    (ev.word32 & masks::overflow));
+    if (tbm_status)
+        DE_trailer_TBM(print, fl, d, tbm_status, event_nr, channel, status);
     if (print)
         d.print_buffer += ":event: " + to_string(event_nr) + "\n";
-//          cout << ":event: " << event_nr << endl;
         
     return status;
+}
+
+// Trailer TBM part
+inline void DE_trailer_TBM(const bool print, const flags &fl, data &d,
+                      const unsigned long &tbm_status,
+                      const unsigned int &event_nr,
+                      const unsigned int &channel, int &status)
+{
+    if (fl.all_TBM_errors) {
+        if (print) {
+            d.print_buffer += "Trailer Error- channel: ";
+            d.print_buffer += to_string(channel);
+            if (tbm_status & masks::TBM_NTP)
+                d.print_buffer += ", no token pass";
+            if (tbm_status & masks::TBM_only_reset)
+                d.print_buffer += ", TBM reset";
+            if (tbm_status & masks::TBM_ROC_reset)
+                d.print_buffer += ", ROC reset";
+            if (tbm_status & masks::TBM_sync_err)
+                d.print_buffer += ", SYNC error";
+            if (tbm_status & masks::TBM_sync_trg)
+                d.print_buffer += ", SYNC trigger";
+            if (tbm_status & masks::TBM_clr_trg)
+                d.print_buffer += ", CLEAR trigger cnt";
+            if (tbm_status & masks::TBM_cal_trg)
+                d.print_buffer += ", CAL trigger";
+            if (tbm_status & masks::TBM_stk_full)
+                d.print_buffer += ", STACK full";
+            d.print_buffer += " ";
+        }
+        
+        return;
+    }
+    
+    if (event_nr > 1 || fl.printFirstReset) {
+        if (tbm_status == masks::TBM_reset) {
+            if (!fl.skipResetMessage) {
+                d.print_buffer += "Trailer Message- channel: ";
+                d.print_buffer += to_string(channel);
+                d.print_buffer += " TBM status:0x";
+                d.print_buffer += String_hex(tbm_status);
+                d.print_buffer += " TBM-Reset received ";
+            }
+        } else {
+            if (print) {
+                d.print_buffer += "Trailer Error- channel: ";
+                d.print_buffer += to_string(channel);
+                d.print_buffer += " TBM status:0x";
+                d.print_buffer += String_hex(tbm_status);
+                d.print_buffer += " ";
+            }
+            ++d.countErrors[channel][16];
+            status = -16;
+        }
+    }
 }
 
 // FIFO
@@ -399,34 +422,25 @@ inline int DE_FIFO(data &d, event &ev,
         
     if (ev.word32 & masks::Fif2NFMask)
         d.print_buffer += "A fifo 2 is Nearly full- ";
-//         cout << "A fifo 2 is Nearly full- ";
     
     if (ev.word32 & masks::TrigNFMask)
         d.print_buffer += "The trigger fifo is nearly Full - ";
-//         cout << "The trigger fifo is nearly Full - ";
     
     if (ev.word32 & masks::ChnFifMask) {
         d.print_buffer += "fifo-1 is nearly full for channel(s) of this FPGA//";
-//         cout << "fifo-1 is nearly full for channel(s) of this FPGA//";
         if (ev.word32 & masks::ChnFifMask0)
             d.print_buffer += " 1 //";
-//             cout << " 1 //";
         if (ev.word32 & masks::ChnFifMask1)
             d.print_buffer += " 2 //";
-//             cout << " 2 //";
         if (ev.word32 & masks::ChnFifMask2)
             d.print_buffer += " 3 ";
-//             cout << " 3 //";
         if (ev.word32 & masks::ChnFifMask3)
             d.print_buffer += " 4 ";
-//             cout << " 4 //";
         if (ev.word32 & masks::ChnFifMask4)
             d.print_buffer += " 5 ";
-//             cout << " 5 ";
     }
     d.print_buffer += ":event: " + event_nr;
     d.print_buffer += "\n";
-//     cout << ":event: " << event_nr << endl;
     
     ++d.countErrors[0][13];
     return -13;

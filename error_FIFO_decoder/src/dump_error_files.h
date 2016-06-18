@@ -1,5 +1,5 @@
-#ifndef dump_error_files_h
-#define dump_error_files_h
+// #ifndef dump_error_files_h
+// #define dump_error_files_h
 
 #include <iostream>
 #include <fstream>
@@ -12,13 +12,14 @@ class flags
   public:
     bool wait;
     bool halt;
+    const bool debug;
     const bool DumpRaw;
     const bool skipResetMessage;
     const bool CHECK_PIXELS;    // Decode_data
     const bool PRINT_PIXELS;    // Decode_data
     const bool PRINT_ERRORS;    // Decode_error
-    const bool debug;
     const bool printFirstReset; // Decode_error
+    const bool all_TBM_errors;  // Decode_error
     const unsigned int SELECT_CHANNEL;
     
     flags();
@@ -94,9 +95,13 @@ inline int DE_ENE(const bool print, data &d, event &ev,
                   const string &str_event_nr,  const unsigned int &channel);
 inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
                       const string &str_event_nr);
-inline int DE_trailer(const bool print, flags &fl, data &d, event &ev,
-                      const unsigned int &event_nr,
+inline int DE_trailer(const bool print, const flags &fl, data &d,
+                      const event &ev, const unsigned int &event_nr,
                       const unsigned int &channel);
+inline void DE_trailer_TBM(const bool print, const flags &fl, data &d,
+                      const unsigned long &tbm_status,
+                      const unsigned int &event_nr,
+                      const unsigned int &channel, int &status);
 inline int DE_FIFO(data &d, event &ev, const string &event_nr);
 
-#endif
+// #endif
