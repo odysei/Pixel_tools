@@ -151,10 +151,6 @@ inline int DE_ENE(const bool print, data &d, event &ev,
         d.print_buffer += ":event: ";
         d.print_buffer += event_nr;
         d.print_buffer +=  "\n";
-        
-//         cout << "Event Number Error- channel: " << channel
-//              << " tbm event nr. " << tbm_event;
-//         cout << ":event: " << event_nr << endl;
     }
     
     ev.tog0word = 0;
@@ -243,20 +239,15 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
         // if((ev.tog0word>0) &&
         //      (((ev.tog0word & masks::eventNumMask) >> 13) == event)) {
         if (print) {
-            if ((ev.tog0word & 0x40))
+            if ((ev.tog0word & masks::TO_PKAM))
                 d.print_buffer += ":PKAM:";
-//                 cout << ":PKAM:";
-            if ((ev.tog0word & 0x80))
-                d.print_buffer += ":Auto Reset:";
-//                 cout << ":Auto Reset:";
-            if ((ev.tog0word & 0x100))
+            if ((ev.tog0word & masks::TO_autoreset))
+                d.print_buffer += ":Autoreset:";
+            if ((ev.tog0word & masks::TO_cal))
                 d.print_buffer += ":CAL:";
-//                 cout << ":CAL:";
-            if ((ev.tog0word & 0x200))
+            if ((ev.tog0word & masks::TO_stk_full))
                 d.print_buffer += ":Stack FULL:";
-//                 cout << ":Stack FULL:";
             d.print_buffer += " :Stack Count: ";
-//             cout << " :Stack Count: ";
         }
 
         if (ev.tog0word & 0x200) {
@@ -313,7 +304,7 @@ inline int DE_trailer(const bool print, const flags &fl, data &d,
     int status = -1;
     const unsigned long tbm_status = (ev.word32 & masks::TBM_status);
 
-    if (ev.word32 & masks::overflow) {
+    if (ev.word32 & masks::TE_overflow) {
         if (print) {
             d.print_buffer += "Overflow Error- channel: ";
             d.print_buffer += to_string(channel) + " ";
@@ -322,7 +313,7 @@ inline int DE_trailer(const bool print, const flags &fl, data &d,
         ++d.countErrors[channel][10];
     }
 
-    if (ev.word32 & masks::ROC_error) {
+    if (ev.word32 & masks::TE_ROC_error) {
         if (print) {
             d.print_buffer += "Number of Rocs Error- channel: ";
             d.print_buffer += to_string(channel) + " ";
@@ -331,14 +322,14 @@ inline int DE_trailer(const bool print, const flags &fl, data &d,
         status = -14;
         ++d.countErrors[channel][14];
     }
-    if (ev.word32 & masks::FSM_error) {
+    if (ev.word32 & masks::TE_FSM_error) {
         if (print) {
-            if (ev.word32 & masks::autoreset) {
+            if (ev.word32 & masks::TE_PKAM) {
                 d.print_buffer += "PKAM- channel: ";
                 d.print_buffer += to_string(channel);
             }
-            if (ev.word32 & masks::PKAM) {
-                d.print_buffer += "AutoReset- channel: ";
+            if (ev.word32 & masks::TE_autoreset) {
+                d.print_buffer += "Autoreset- channel: ";
                 d.print_buffer += to_string(channel);
                 d.print_buffer += " ";
             }
@@ -348,9 +339,9 @@ inline int DE_trailer(const bool print, const flags &fl, data &d,
     }
 
     // trailer errors/messages
-//     const unsigned long non_TBM = ((ev.word32 & masks::ROC_error) |
-//                                    (ev.word32 & masks::FSM_error) |
-//                                    (ev.word32 & masks::overflow));
+//     const unsigned long non_TBM = ((ev.word32 & masks::TE_ROC_error) |
+//                                    (ev.word32 & masks::TE_FSM_error) |
+//                                    (ev.word32 & masks::TE_overflow));
     if (tbm_status)
         DE_trailer_TBM(print, fl, d, tbm_status, event_nr, channel, status);
     if (print)
