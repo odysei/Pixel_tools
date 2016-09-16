@@ -30,7 +30,7 @@ class data
   public:
     bool tmp_catcher;
     
-    static const unsigned int ch_nr = 37;
+    static const unsigned int ch_nr = 49;
     static const unsigned int error_nr = 20;
     static const unsigned int buffer_sz = 1000000;
 
