@@ -1,5 +1,5 @@
-// #ifndef dump_error_files_masks_h
-// #define dump_error_files_masks_h
+#ifndef VME_piggy__masks_h
+#define VME_piggy__masks_h
 
 namespace masks
 {
@@ -79,4 +79,4 @@ type ChnFifMask4 = 0x10;// channel mask
 const int offsets[8] = {0, 4, 9, 13, 18, 22, 27, 31};
 }
 
-// #endif
+#endif

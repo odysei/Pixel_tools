@@ -1,4 +1,3 @@
-bin/
-src/dump_error_files.o
-src/dump_error_files_deco.o
+*.o
 
+bin/

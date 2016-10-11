@@ -1,8 +1,9 @@
-#ifndef dump_error_files_deco_cc
-#define dump_error_files_deco_cc
+#ifndef VME_piggy__decoder_cc
+#define VME_piggy__decoder_cc
 
-#include "dump_error_files.h"
-#include "dump_error_files_masks.h"
+#include "VME_piggy/decoder.h"
+#include "VME_piggy/masks.h"
+#include "process_file.h"
 
 #ifdef OLD_COMPILER
 /*
