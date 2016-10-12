@@ -165,8 +165,10 @@ inline int DE_ENE(const bool print, data &d, event &ev,
 inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
                       const string &event_nr, const unsigned int &channel)
 {
-    if (print)
+    if (print) {
         d.print_buffer += "Timeout Error - ";
+        d.print_buffer += "channel: " + to_string(channel);
+    }
     // timeout word 1
     if (ev.tog0word == 0) {
         ev.tog0word = ev.word32;
