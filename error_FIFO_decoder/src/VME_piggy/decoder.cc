@@ -42,11 +42,11 @@ int Decode_data(flags &fl, data &d, event &ev)
             d.print_buffer += String_hex(ev.word32);
         }
         
-        const unsigned long channel = ((ev.word32 & masks::chnlmsk) >> 26);
+        const unsigned long channel = ((ev.word32 & masks::channel) >> 26);
         if (channel > 0 && channel < 37) { // valid channels 1-36
             const unsigned long dcol = (ev.word32 & masks::dclmsk) >> 16;
-            const unsigned long pix = (ev.word32 & masks::pxlmsk) >> 8;
-            const unsigned long adc = (ev.word32 & masks::plsmsk);
+            const unsigned long pix = (ev.word32 & masks::pixel) >> 8;
+            const unsigned long adc = (ev.word32 & masks::pulse_height);
             
             if (fl.PRINT_PIXELS)
                 cout << " Channel- " << channel << " ROC- " << roc << " DCOL- "
@@ -88,8 +88,8 @@ int Decode_error(flags &fl, data &d, event &ev)
         return DE_gap(fl.debug, d, ev.tog0word);
 
     // used in other words:
-    const unsigned long channel = (ev.word32 & masks::channelMask) >> 26;
-    const unsigned long event_nr = (ev.word32 & masks::eventNumMask) >> 13;
+    const unsigned long channel = (ev.word32 & masks::channel) >> 26;
+    const unsigned long event_nr = (ev.word32 & masks::event_number) >> 13;
     const string str_event_nr = to_string(event_nr);
     const bool print = fl.PRINT_ERRORS || (channel == fl.SELECT_CHANNEL);
     
@@ -114,6 +114,7 @@ int Decode_error(flags &fl, data &d, event &ev)
     d.print_buffer += String_hex(ev.word32);
     d.print_buffer += " event ";
     d.print_buffer += str_event_nr;
+    d.print_buffer += "\n";
 
     return -1;
 }
@@ -143,19 +144,20 @@ inline int DE_ENE(const bool print, data &d, event &ev,
                   const string &event_nr,
                   const unsigned int &channel)
 {
-    const unsigned long tbm_event = (ev.word32 & masks::tbmEventMask);
-    if (print) {
-        d.print_buffer += "Event Number Error- channel: ";
-        d.print_buffer += to_string(channel);
-        d.print_buffer += " tbm event nr. ";
-        d.print_buffer += to_string(tbm_event);
-        d.print_buffer += ":event: ";
-        d.print_buffer += event_nr;
-        d.print_buffer +=  "\n";
-    }
-    
     ev.tog0word = 0;
     ++d.countErrors[channel][12];
+    if (!print)
+        return -12;
+    
+    const unsigned long tbm_event = (ev.word32 & masks::ENE_TBM_event_nr);
+    d.print_buffer += "Event Number Error- channel: ";
+    d.print_buffer += to_string(channel);
+    d.print_buffer += " tbm event nr. ";
+    d.print_buffer += to_string(tbm_event);
+    d.print_buffer += " :event: ";
+    d.print_buffer += event_nr;
+    d.print_buffer +=  "\n";
+    
     return -12;
 }
 
@@ -178,7 +180,7 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
         d.print_buffer += "Timeout Chnl Mask in group of 4-5 0x";
         d.print_buffer += enbablette;
         d.print_buffer += " event ";
-        d.print_buffer += to_string((ev.tog0word & masks::eventNumMask) >> 13);
+        d.print_buffer += to_string((ev.tog0word & masks::event_number) >> 13);
         d.print_buffer += "\n";
         d.print_buffer += "1st channel in group : ";
         d.print_buffer += to_string(masks::offsets[((ev.word32 & masks::BlkNumMask) >> 8)] + 1);
@@ -188,7 +190,7 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
         d.print_buffer += " channels";
         d.print_buffer += "\n";
 //         cout << "Timeout Chnl Mask in group of 4-5 0x" << hex << enbablette
-//              << dec << " event " << ((ev.tog0word & masks::eventNumMask) >> 13)
+//              << dec << " event " << ((ev.tog0word & masks::event_number) >> 13)
 //              << endl;
 //         cout << "1st channel in group : "
 //             << (masks::offsets[((ev.word32 & masks::BlkNumMask) >> 8)] + 1) << " of ";
@@ -238,7 +240,7 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
         }
 
         // if((ev.tog0word>0) &&
-        //      (((ev.tog0word & masks::eventNumMask) >> 13) == event)) {
+        //      (((ev.tog0word & masks::event_number) >> 13) == event)) {
         if (print) {
             if ((ev.tog0word & masks::TO_PKAM))
                 d.print_buffer += ":PKAM:";
@@ -281,10 +283,10 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
             }
             if (print) {
                 d.print_buffer += ":event: ";
-                d.print_buffer += to_string((ev.tog0word & masks::eventNumMask) >> 13);
+                d.print_buffer += to_string((ev.tog0word & masks::event_number) >> 13);
                 d.print_buffer += "\n";
             }
-//                 cout << ":event: " << ((ev.tog0word & masks::eventNumMask) >> 13) << endl;
+//                 cout << ":event: " << ((ev.tog0word & masks::event_number) >> 13) << endl;
             ev.tog0word = 0;
         }
         ev.tog0word = ev.word32;
@@ -354,47 +356,48 @@ inline void DE_trailer_TBM(const bool print, const flags &fl, data &d,
                       const unsigned int &channel, int &status)
 {
     if (fl.all_TBM_errors) {
-        if (print) {
-            if (tbm_status & masks::TBM_NTP)
-                d.print_buffer += ", no token pass";
-            if (tbm_status & masks::TBM_only_reset)
-                d.print_buffer += ", TBM reset";
-            if (tbm_status & masks::TBM_ROC_reset)
-                d.print_buffer += ", ROC reset";
-            if (tbm_status & masks::TBM_sync_err)
-                d.print_buffer += ", SYNC error";
-            if (tbm_status & masks::TBM_sync_trg)
-                d.print_buffer += ", SYNC trigger";
-            if (tbm_status & masks::TBM_clr_trg)
-                d.print_buffer += ", CLEAR trigger cnt";
-            if (tbm_status & masks::TBM_cal_trg)
-                d.print_buffer += ", CAL trigger";
-            if (tbm_status & masks::TBM_stk_full)
-                d.print_buffer += ", STACK full";
-            d.print_buffer += " ";
-        }
+        if (!print)
+            return;
+        if (tbm_status & masks::TBM_NTP)
+            d.print_buffer += ", no token pass";
+        if (tbm_status & masks::TBM_only_reset)
+            d.print_buffer += ", TBM reset";
+        if (tbm_status & masks::TBM_ROC_reset)
+            d.print_buffer += ", ROC reset";
+        if (tbm_status & masks::TBM_sync_err)
+            d.print_buffer += ", SYNC error";
+        if (tbm_status & masks::TBM_sync_trg)
+            d.print_buffer += ", SYNC trigger";
+        if (tbm_status & masks::TBM_clr_trg)
+            d.print_buffer += ", CLEAR trigger cnt";
+        if (tbm_status & masks::TBM_cal_trg)
+            d.print_buffer += ", CAL trigger";
+        if (tbm_status & masks::TBM_stk_full)
+            d.print_buffer += ", STACK full";
+        d.print_buffer += " ";
         
         return;
     }
     
-    if (event_nr > 1 || fl.printFirstReset) {
-        if (tbm_status == masks::TBM_reset) {
-            if (!fl.skipResetMessage) {
-                d.print_buffer += " Trailer Message";
-                d.print_buffer += " TBM status:0x";
-                d.print_buffer += String_hex(tbm_status);
-                d.print_buffer += " TBM-Reset received ";
-            }
-        } else {
-            if (print) {
-                d.print_buffer += " TBM status:0x";
-                d.print_buffer += String_hex(tbm_status);
-                d.print_buffer += " ";
-            }
-            ++d.countErrors[channel][16];
-            status = -16;
-        }
+    if (event_nr <= 1 && !fl.printFirstReset)
+        return;
+    if (tbm_status == masks::TBM_reset) {
+        if (fl.skipResetMessage)
+            return;
+        d.print_buffer += " Trailer Message";
+        d.print_buffer += " TBM status:0x";
+        d.print_buffer += String_hex(tbm_status);
+        d.print_buffer += " TBM-Reset received ";
+        return;
     }
+    ++d.countErrors[channel][16];
+    status = -16;
+    
+    if (!print)
+        return;
+    d.print_buffer += " TBM status:0x";
+    d.print_buffer += String_hex(tbm_status);
+    d.print_buffer += " ";
 }
 
 // FIFO

@@ -8,29 +8,28 @@ typedef const unsigned long type;
 /*
  * Data-word masks
  */
-type plsmsk = 0xff;   // pulse height
-type pxlmsk = 0xff00; // pixel index
+type pulse_height = 0xff;   // pulse height
+type pixel = 0xff00;    // pixel index
 type dclmsk = 0x1f0000;
 type rocmsk = 0x3e00000;
-type chnlmsk = 0xfc000000;
+type channel = 0xfc000000;
 
 /*
  * Error-word masks
  */
 type errorMask = 0x3e00000;     // (0x1f << 21)
-type dummyMask = 0x03600000;    // (0x1b << 21)
-type gapMask = 0x03400000;      // (0x1a << 21)
+// type dummyMask = 0x03600000;    // (0x1b << 21)
+// type gapMask = 0x03400000;      // (0x1a << 21)
 type timeOut = 0x3a00000;       // (0x1d << 21)
 type eventNumError = 0x3e00000; // (0x1f << 21)
 type trailError = 0x3c00000;    // (0x1e << 21)
-type fifoError = 0x3800000;     // (0x1c << 21) nearly full
-type channelMask = 0xfc000000;  // channel num mask
-type eventNumMask = 0x1fe000;   // event number mask
+// type fifoError = 0x3800000;     // (0x1c << 21) nearly full
+type event_number = 0x1fe000;   // event number mask
 
 /* 
  * Event-number-error-word masks
  */
-type tbmEventMask = 0xff;      // tbm event num mask
+type ENE_TBM_event_nr = 0xff;   // tbm event number
 
 /* 
  * Trailer-error-word masks
@@ -54,29 +53,8 @@ type TBM_stk_full = 0x1;    // stack full
 /* 
  * Timeout-error-word masks
  */
-type BlkNumMask = 0x700;     // pointer to error fifo #
-type MSB_counter = 0xfc000000;
-type LSB_counter = 0x1800;
-type TO_data_chs = 0x1f;
-type TO_stk_full = 0x200;
-type TO_cal = 0x100;
-type TO_autoreset = 0x80;
-type TO_PKAM = 0x40;
-
-/* 
- * FIFO-error-word (nearly full) masks
- */
-type Fif2NFMask = 0x40; // mask for fifo2 NF
-type TrigNFMask = 0x80; // mask for trigger fifo NF
-type ChnFifMask = 0x1f; // channel mask
-type ChnFifMask0 = 0x1; // channel mask
-type ChnFifMask1 = 0x2; // channel mask
-type ChnFifMask2 = 0x4; // channel mask
-type ChnFifMask3 = 0x8; // channel mask
-type ChnFifMask4 = 0x10;// channel mask
-    
-// offsets for channels in a block
-const int offsets[8] = {0, 4, 9, 13, 18, 22, 27, 31};
+type TO_w1_stack = 0x3f;    // TBM stack count from prev. ev.
+type TO_w2_channel = 0x3f;  // channel index
 }
 
 #endif

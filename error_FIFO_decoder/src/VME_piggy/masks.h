@@ -8,11 +8,11 @@ typedef const unsigned long type;
 /*
  * Data-word masks
  */
-type plsmsk = 0xff;   // pulse height
-type pxlmsk = 0xff00; // pixel index
+type pulse_height = 0xff;   // pulse height
+type pixel = 0xff00; // pixel index
 type dclmsk = 0x1f0000;
 type rocmsk = 0x3e00000;
-type chnlmsk = 0xfc000000;
+type channel = 0xfc000000;
 
 /*
  * Error-word masks
@@ -24,13 +24,12 @@ type timeOut = 0x3a00000;       // (0x1d << 21)
 type eventNumError = 0x3e00000; // (0x1f << 21)
 type trailError = 0x3c00000;    // (0x1e << 21)
 type fifoError = 0x3800000;     // (0x1c << 21) nearly full
-type channelMask = 0xfc000000;  // channel num mask
-type eventNumMask = 0x1fe000;   // event number mask
+type event_number = 0x1fe000;   // event number mask
 
 /* 
  * Event-number-error-word masks
  */
-type tbmEventMask = 0xff;      // tbm event num mask
+type ENE_TBM_event_nr = 0xff;   // tbm event num mask
 
 /* 
  * Trailer-error-word masks
