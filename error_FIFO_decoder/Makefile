@@ -16,8 +16,10 @@ INC = include
 CXXFLAGS += --std=c++0x \
 -pedantic -Wunused-variable -Werror=sign-compare \
 -Wunused-but-set-variable -Werror=return-type -Werror=missing-braces \
--Werror=maybe-uninitialized -fPIC -O \
+-fPIC -O \
 -I $(INC) -I $(SRC_DIR)
+# add for newer compilers:
+#-Werror=maybe-uninitialized
 #-Werror=delete-non-virtual-dtor
 
 # CXXFLAGS += -D OLD_COMPILER
