@@ -104,12 +104,8 @@ inline int Process_file_(flags &fl, ifstream &in_file, data &d,
     if (ev_nr == 0) 
         d.time0 = d.time;
     const double dtime = d.time - d.time0;
-//     if (dtime >= 26939) {
-        d.print_buffer += " time in sec. = " + to_string(dtime) + ", count = " +
-                          to_string(d.count) + "\n";
-//         cout << " time in sec. = " << dtime
-//             << ", count = " << d.count << endl;
-//     }
+    d.print_buffer += " time in sec. = " + to_string(dtime);
+    d.print_buffer += ", count = " + to_string(d.count) + "\n";
     
     // fifo loop
     event ev;
@@ -124,24 +120,10 @@ inline int Process_file_(flags &fl, ifstream &in_file, data &d,
     }
     for (unsigned int i = 0; i < d.count; ++i) {
         ++ev_nr;
-//         if (dtime < 26939)///////
-//             continue;
-//         if (!d.tmp_catcher) {
-//             if (dtime == 26939 && d.count == 290)
-//                 d.tmp_catcher = true;
-//             else
-//                 continue;
-//         }
-//         if (dtime != 26939 || (d.count != 290 && d.count != 193))
-//             continue;
-//         if (dtime > 333)
-//             continue;
-        /////
         ev.word32 = Convert_32bit(buffer, 4 * i);
 
         if (fl.DumpRaw)
             d.print_buffer += String_hex(ev.word32) + "\n";
-//             cout << hex << ev.word32 << dec << endl;
         if (ev.word32 != 0)
             ev.status = Decode_data(fl, d, ev);
         // if (ev.status == -12)
@@ -211,14 +193,15 @@ void Print_summary(const unsigned int countErrors[][data::error_nr])
     int countAllChanErrors[data::error_nr] = {0};
     cout << " channel error count " << endl;
     
-    for (unsigned int ichan = 0; ichan < data::ch_nr; ++ichan)
+    for (unsigned int ichan = 0; ichan < data::ch_nr; ++ichan) {
         for (unsigned int ierr = 0; ierr < data::error_nr; ++ierr) {
             const unsigned int nr = countErrors[ichan][ierr];
-            if (nr > 0) {
-                cout << ichan << " " << errorString[ierr] << " " << nr << endl;
-                countAllChanErrors[ierr] += nr;
-            }
+            if (nr <= 0)
+                continue;
+            cout << ichan << " " << errorString[ierr] << " " << nr << endl;
+            countAllChanErrors[ierr] += nr;
         }
+    }
     
     for (unsigned int ierr = 0; ierr < data::error_nr; ++ierr)
         if (countAllChanErrors[ierr] > 0)
