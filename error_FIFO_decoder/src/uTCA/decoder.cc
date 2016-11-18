@@ -178,7 +178,7 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
             return -11;
         
         const auto stack = (ev.word32 & masks::TO_w1_stack);
-        d.print_buffer += "W1: ";
+        d.print_buffer += " :W1: ";
         d.print_buffer += "stack: " + to_string(stack);
         d.print_buffer += " :event: ";
         d.print_buffer += event_nr + "\n";
@@ -191,7 +191,7 @@ inline int DE_timeout(const bool print, flags &fl, data &d, event &ev,
         return -11;
     
     const auto ch = (ev.word32 & masks::TO_w2_channel);
-    d.print_buffer += "W2: ";
+    d.print_buffer += " :W2: ";
     d.print_buffer += "extra ch index: " + to_string(ch);
     d.print_buffer += " :event: " + event_nr + "\n";
 
